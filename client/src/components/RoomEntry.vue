@@ -7,10 +7,10 @@ defineEmits(['offline']);
 const code = ref('');
 
 const messages = {
-  'room-not-found': 'Cette salle n’existe pas ou elle est vide. Vérifiez le code.',
-  'room-full': 'Cette salle est pleine.',
+  'room-not-found': 'Salle introuvable. Vérifiez le code saisi.',
+  'room-full': 'Cette salle a atteint son nombre maximal d’appareils.',
   'room-required': 'Saisissez le code de la salle.',
-  'rate-limited': 'Trop d’essais. Réessayez dans une minute.',
+  'rate-limited': 'Trop de tentatives. Réessayez dans une minute.',
 };
 const error = computed(() => messages[state.roomError] ?? '');
 const ready = computed(() => normalizeRoom(code.value).length >= 4);
@@ -22,14 +22,14 @@ function join() {
 
 <template>
   <section class="entry" aria-labelledby="h-entry">
-    <h2 id="h-entry">Envoyez des fichiers à un appareil proche</h2>
+    <h2 id="h-entry">Partager des fichiers avec un appareil proche</h2>
     <p class="lead">
-      Les deux appareils doivent être sur le même wifi. Le fichier passe directement de l’un à l’autre, sans consommer de données mobiles.
+      Les deux appareils doivent être connectés au même réseau wifi. Les fichiers sont transmis directement de l’un à l’autre, sans consommer de données mobiles.
     </p>
 
     <p v-if="state.serverDown" class="note">
-      Le serveur est injoignable. Vérifiez votre connexion Internet, ou
-      <button class="link" type="button" @click="$emit('offline')">reliez deux appareils sans serveur</button>.
+      Le serveur est injoignable. Vérifiez votre connexion Internet ou
+      <button class="link" type="button" @click="$emit('offline')">utilisez la connexion sans serveur</button>.
     </p>
 
     <div class="entry-actions">
@@ -38,7 +38,7 @@ function join() {
       </button>
     </div>
 
-    <p class="or">ou rejoignez une salle existante</p>
+    <p class="or">Rejoindre une salle existante</p>
 
     <form class="join" @submit.prevent="join">
       <label class="visually-hidden" for="room-code">Code de la salle</label>

@@ -90,10 +90,10 @@ export const state = reactive({
 
 const readable = (error) =>
   error?.name === 'NotFoundError' || error?.name === 'NotReadableError'
-    ? 'Fichier illisible (dossier ou fichier déplacé)'
+    ? 'Fichier illisible : il a été déplacé ou supprimé.'
     : error?.name === 'QuotaExceededError'
-      ? "Plus de place sur l'appareil qui reçoit"
-      : error?.message || 'Erreur inconnue';
+      ? 'Espace de stockage insuffisant sur l’appareil récepteur.'
+      : error?.message || 'Une erreur est survenue.';
 
 /** Une erreur d'envoi qui vient du lien (et non du fichier ou du disque) se rattrape par une reprise. */
 const isLinkError = (error) =>
@@ -280,7 +280,7 @@ class WifiDrop {
       link.pc.close();
     }
     for (const live of [...this.#live.values()]) {
-      if (live.peerId === id) this.#fail(live, `${live.state.peerName} s'est déconnecté`);
+      if (live.peerId === id) this.#fail(live, `${live.state.peerName} n’est plus connecté.`);
     }
   }
 
@@ -410,31 +410,6 @@ class WifiDrop {
     );
   }
 
-  /** Les connexions entre réseaux différents prennent plus de temps à s'établir (recherche d'adresse publique). */
-  #p2pTimeout() {
-    return this.#ice.length ? P2P_TIMEOUT * 2 : P2P_TIMEOUT;
-  }
-
-  /** Repère si la connexion directe reste sur le réseau local ou passe par Internet (et consomme alors des données). */
-  async #probeRoute(live, pc) {
-    try {
-      const stats = await pc.getStats();
-      let pair;
-      stats.forEach((r) => {
-        if (r.type === 'transport' && r.selectedCandidatePairId) pair = stats.get(r.selectedCandidatePairId);
-      });
-      if (!pair) {
-        stats.forEach((r) => {
-          if (!pair && r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r;
-        });
-      }
-      const kinds = [stats.get(pair?.localCandidateId)?.candidateType, stats.get(pair?.remoteCandidateId)?.candidateType];
-      if (kinds.every(Boolean)) live.state.route = kinds.every((k) => k === 'host') ? 'local' : 'internet';
-    } catch {
-      /* statistiques indisponibles : l'affichage reste « connexion directe » */
-    }
-  }
-
   #startP2P(live) {
     const st = live.state;
     st.status = 'connecting';
@@ -450,13 +425,12 @@ class WifiDrop {
     live.pc = pc;
 
     const channel = pc.createDataChannel('wifidrop', { ordered: true });
-    live.p2pTimer = setTimeout(() => this.#p2pFailed(live), this.#p2pTimeout());
+    live.p2pTimer = setTimeout(() => this.#p2pFailed(live), P2P_TIMEOUT);
 
     channel.onopen = () => {
       if (live.settled || live.aborted || live.pc !== pc) return;
       live.settled = true;
       clearTimeout(live.p2pTimer);
-      this.#probeRoute(live, pc);
       const transport = new RtcTransport(channel);
       transport.onclose = () => this.#onTransportClosed(live, transport);
       this.#armSender(live, transport);
@@ -481,7 +455,7 @@ class WifiDrop {
   /** Appareil relié sans serveur : le transfert ouvre un canal de plus sur la connexion existante. */
   #startOffline(live) {
     const link = this.#links.get(live.peerId);
-    if (!link) return this.#fail(live, 'Appareil déconnecté');
+    if (!link) return this.#fail(live, 'L’appareil n’est plus connecté.');
     live.state.status = 'connecting';
     live.settled = false;
 
@@ -489,9 +463,9 @@ class WifiDrop {
     try {
       channel = link.pc.createDataChannel(`t:${live.id}`, { ordered: true });
     } catch {
-      return this.#fail(live, 'Appareil déconnecté');
+      return this.#fail(live, 'L’appareil n’est plus connecté.');
     }
-    live.p2pTimer = setTimeout(() => this.#fail(live, "Connexion directe impossible, essayez de reconnecter les deux appareils", true), P2P_TIMEOUT * 2);
+    live.p2pTimer = setTimeout(() => this.#fail(live, 'Connexion impossible. Reconnectez les deux appareils, puis réessayez.', true), P2P_TIMEOUT * 2);
     channel.onopen = () => {
       if (live.settled || live.aborted) return;
       live.settled = true;
@@ -518,7 +492,7 @@ class WifiDrop {
       live,
       state.relay
         ? 'Connexion au serveur perdue'
-        : 'Connexion directe impossible. Certains réseaux, notamment mobiles, la bloquent : placez les deux appareils sur le même wifi ou le même point d’accès, puis réessayez.',
+        : 'Connexion directe impossible. Vérifiez que les deux appareils sont sur le même réseau wifi ou le même point d’accès, puis réessayez.',
       true,
     );
   }
@@ -571,7 +545,7 @@ class WifiDrop {
         this.#end(live, 'canceled');
         break;
       case 'error':
-        this.#fail(live, msg.message || 'Erreur côté récepteur');
+        this.#fail(live, msg.message || 'Erreur signalée par le récepteur.');
         break;
     }
   }
@@ -590,7 +564,7 @@ class WifiDrop {
       Number.isFinite(offset) && offset >= 0 &&
       (fileIndex === files.length ? offset === 0 : offset <= files[fileIndex].size) &&
       received === before + offset;
-    if (!valid) return this.#fail(live, 'Reprise impossible : les deux appareils ne sont pas d’accord', true);
+    if (!valid) return this.#fail(live, 'Reprise impossible : les deux appareils ne sont pas synchronisés.', true);
 
     const run = ++live.runId;
     const alive = () => !live.aborted && live.runId === run && live.transport === transport;
@@ -687,7 +661,7 @@ class WifiDrop {
     live.state.status = 'connecting';
     live.state.saveMode = saver.mode;
     this.#signal(live.peerId, { kind: 'accept', transferId: id });
-    live.waitTimer = setTimeout(() => this.#fail(live, "L'expéditeur ne répond pas"), ACCEPT_TIMEOUT);
+    live.waitTimer = setTimeout(() => this.#fail(live, 'L’expéditeur ne répond pas.'), ACCEPT_TIMEOUT);
   }
 
   decline(id) {
@@ -710,7 +684,7 @@ class WifiDrop {
     try {
       pc = new RTCPeerConnection({ iceServers: this.#ice });
     } catch {
-      return this.#fail(live, 'WebRTC indisponible sur cet appareil', true);
+      return this.#fail(live, 'Ce navigateur ne prend pas en charge WebRTC.', true);
     }
     live.pc = pc;
     pc.onicecandidate = (e) => {
@@ -721,8 +695,6 @@ class WifiDrop {
       const transport = new RtcTransport(channel);
       transport.onclose = () => this.#onTransportClosed(live, transport);
       this.#attachReceiver(live, transport);
-      if (channel.readyState === 'open') this.#probeRoute(live, pc);
-      else channel.addEventListener('open', () => this.#probeRoute(live, pc), { once: true });
     };
     this.#watchConnection(live, pc);
     live.resumeTimer = setTimeout(() => this.#fail(live, 'Connexion perdue : reprise impossible'), RESUME_TIMEOUT);
@@ -823,7 +795,7 @@ class WifiDrop {
         this.#end(live, 'canceled');
         break;
       case 'error':
-        this.#fail(live, msg.message || "Erreur côté expéditeur");
+        this.#fail(live, msg.message || 'Erreur signalée par l’expéditeur.');
         break;
     }
   }
@@ -887,7 +859,7 @@ class WifiDrop {
     if (live.aborted || FINAL.has(st.status) || st.status === 'reconnecting') return;
     if (!live.transport && !keepLink) return; // pas encore de lien établi : les délais de connexion s'en chargent
     if (this.#links.get(live.peerId)?.kind === 'offline') {
-      return this.#fail(live, 'Connexion interrompue : la reprise n’est pas possible sans serveur', true);
+      return this.#fail(live, 'Connexion interrompue. La reprise n’est pas possible sans serveur.', true);
     }
 
     this.#dropLink(live);
@@ -1061,7 +1033,6 @@ class WifiDrop {
       current: '',
       status: direction === 'send' ? 'waiting' : 'pending',
       transport: null,
-      route: null, // 'local' ou 'internet' une fois la connexion directe établie
       saveMode: null,
       reconnects: 0,
       error: '',

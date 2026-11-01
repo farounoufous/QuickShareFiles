@@ -39,7 +39,7 @@ export async function encodeCode(payload) {
 
 export async function decodeCode(code) {
   const text = String(code ?? '').replace(/\s+/g, '');
-  if (!text.startsWith(PREFIX) || text.length < PREFIX.length + 2) throw new Error("Ce code n'est pas valide.");
+  if (!text.startsWith(PREFIX) || text.length < PREFIX.length + 2) throw new Error('Ce code n’est pas valide.');
   const mode = text[PREFIX.length];
   let bytes;
   try {
@@ -54,7 +54,7 @@ export async function decodeCode(code) {
     if (typeof payload?.sdp !== 'string' || !['offer', 'answer'].includes(payload.t)) throw new Error('forme');
     return payload;
   } catch {
-    throw new Error("Ce code n'est pas valide ou a été copié de façon incomplète.");
+    throw new Error('Ce code n’est pas valide ou a été copié de façon incomplète.');
   }
 }
 
@@ -111,7 +111,7 @@ export class OfflineSession {
 
   async acceptOffer(code) {
     const payload = await decodeCode(code);
-    if (payload.t !== 'offer') throw new Error("C'est le code d'une réponse : scannez plutôt le code de départ.");
+    if (payload.t !== 'offer') throw new Error('Ce code est un code de réponse. Scannez le code affiché par le premier appareil.');
     await this.pc.setRemoteDescription({ type: 'offer', sdp: payload.sdp });
     await this.pc.setLocalDescription(await this.pc.createAnswer());
     await gathered(this.pc);
@@ -120,7 +120,7 @@ export class OfflineSession {
 
   async acceptAnswer(code) {
     const payload = await decodeCode(code);
-    if (payload.t !== 'answer') throw new Error("C'est le code de départ : scannez plutôt le code de réponse.");
+    if (payload.t !== 'answer') throw new Error('Ce code est un code de départ. Scannez le code de réponse affiché par l’autre appareil.');
     await this.pc.setRemoteDescription({ type: 'answer', sdp: payload.sdp });
   }
 

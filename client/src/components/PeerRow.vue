@@ -68,7 +68,7 @@ onBeforeUnmount(() => clearTimeout(flashTimer));
     <span class="avatar" aria-hidden="true">{{ peer.name.charAt(0).toUpperCase() }}</span>
     <div class="peer-text">
       <strong>{{ peer.name }}</strong>
-      <span>{{ over ? 'Déposez les fichiers pour les envoyer' : flash || peer.device }}</span>
+      <span>{{ over ? 'Déposez les fichiers ici pour les envoyer' : flash || peer.device }}</span>
     </div>
     <div class="peer-actions">
       <button class="btn ghost" type="button" :aria-expanded="composing" :aria-label="`Envoyer du texte à ${peer.name}`" @click="composing = !composing">Texte</button>

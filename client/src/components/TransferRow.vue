@@ -13,11 +13,7 @@ const busy = computed(() => isBusy(props.t));
 const percent = computed(() => (props.t.totalBytes ? Math.min(100, (props.t.doneBytes / props.t.totalBytes) * 100) : 100));
 const speed = computed(() => splitBytes(props.t.speed));
 const route = computed(() => {
-  if (props.t.transport === 'p2p') {
-    if (props.t.route === 'internet') return 'Connexion directe via Internet, consomme des données';
-    if (props.t.route === 'local') return 'Connexion directe sur le réseau local';
-    return 'Connexion directe';
-  }
+  if (props.t.transport === 'p2p') return 'Connexion directe';
   return state.mode === 'public' ? 'Via le serveur' : 'Via le serveur local';
 });
 const memoryWarning = computed(
@@ -27,7 +23,7 @@ const memoryWarning = computed(
 const headline = computed(() => {
   const { peerName, title, status } = props.t;
   if (status === 'pending') return `${peerName} souhaite vous envoyer ${title}`;
-  return sending.value ? `${title}, vers ${peerName}` : `${title}, de ${peerName}`;
+  return sending.value ? `Envoi de ${title} à ${peerName}` : `Réception de ${title} de ${peerName}`;
 });
 
 const summary = computed(() => {
@@ -36,24 +32,24 @@ const summary = computed(() => {
     case 'pending':
       return formatBytes(t.totalBytes);
     case 'waiting':
-      return `En attente de ${t.peerName}…`;
+      return `En attente de la réponse de ${t.peerName}…`;
     case 'connecting':
-      return 'Connexion…';
+      return 'Connexion en cours…';
     case 'reconnecting':
-      return `Connexion perdue, reprise en cours à ${formatBytes(t.doneBytes)} sur ${formatBytes(t.totalBytes)}…`;
+      return `Connexion interrompue. Reprise à ${formatBytes(t.doneBytes)} sur ${formatBytes(t.totalBytes)}…`;
     case 'transferring':
       return `${formatBytes(t.doneBytes)} sur ${formatBytes(t.totalBytes)}`;
     case 'done': {
       const took = formatDuration((t.endedAt ?? 0) - (t.startedAt ?? t.endedAt ?? 0));
-      const resumed = t.reconnects ? `, repris ${t.reconnects} fois` : '';
-      return `Terminé en ${took}, ${formatBytes(t.totalBytes)} à ${formatBytes(t.avgSpeed)}/s en moyenne${resumed}`;
+      const resumed = t.reconnects ? ` Transfert repris ${t.reconnects} fois.` : '';
+      return `Terminé en ${took} : ${formatBytes(t.totalBytes)} à ${formatBytes(t.avgSpeed)}/s en moyenne.${resumed}`;
     }
     case 'declined':
       return `Refusé par ${t.peerName}`;
     case 'canceled':
-      return 'Annulé';
+      return 'Transfert annulé';
     default:
-      return t.error || 'Échec du transfert';
+      return t.error || 'Le transfert a échoué.';
   }
 });
 </script>
@@ -66,9 +62,9 @@ const summary = computed(() => {
         {{ summary }}
         <template v-if="active && t.transport"> · {{ route }}</template>
       </p>
-      <p v-if="active && t.files.length > 1 && t.current" class="transfer-sub">En cours : {{ t.current }}</p>
+      <p v-if="active && t.files.length > 1 && t.current" class="transfer-sub">Fichier en cours : {{ t.current }}</p>
       <p v-if="memoryWarning" class="transfer-warn">
-        Ce navigateur garde le fichier en mémoire jusqu’à la fin. Pour un fichier aussi gros, utilisez Chrome ou Edge sur ordinateur, sur une page sécurisée (https).
+        Ce navigateur conserve le fichier en mémoire jusqu’à la fin du transfert. Pour un fichier de cette taille, utilisez Chrome ou Edge sur ordinateur, sur une page sécurisée (https).
       </p>
     </div>
 

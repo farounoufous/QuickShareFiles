@@ -56,7 +56,7 @@ function armTimeout() {
   clearTimeout(timeout);
   timeout = window.setTimeout(() => {
     if (connected) return;
-    error.value = 'La connexion n’a pas abouti. Les deux appareils sont-ils sur le même réseau ? Recommencez depuis le début.';
+    error.value = 'La connexion a échoué. Vérifiez que les deux appareils sont sur le même réseau, puis recommencez.';
     reset(false);
   }, 30_000);
 }
@@ -86,7 +86,7 @@ async function startHost() {
     qr.value = await qrSvg(code.value);
     step.value = 'show-offer';
   } catch (e) {
-    error.value = e.message || 'Impossible de créer le code.';
+    error.value = e.message || 'Le code n’a pas pu être créé.';
     reset(false);
   }
   busy.value = false;
@@ -121,7 +121,7 @@ async function receive(text) {
     }
     manual.value = '';
   } catch (e) {
-    error.value = e.message || 'Code refusé.';
+    error.value = e.message || 'Code non reconnu.';
     if (role.value === 'guest' && step.value === 'scan-offer') {
       session?.close();
       session = null;
@@ -175,7 +175,7 @@ onBeforeUnmount(() => reset());
 <template>
   <dialog ref="dialog" class="sheet" aria-labelledby="h-offline" @close="close" @cancel="close">
     <header class="sheet-head">
-      <h2 id="h-offline">Relier deux appareils sans serveur</h2>
+      <h2 id="h-offline">Connexion sans serveur</h2>
       <button class="btn ghost" type="button" @click="close">Fermer</button>
     </header>
 
@@ -183,18 +183,17 @@ onBeforeUnmount(() => reset());
 
     <div v-if="step === 'choose'" class="sheet-body">
       <p class="lead">
-        Aucune connexion Internet requise. Les deux appareils doivent être sur le même wifi, le même point d’accès ou le même câble :
-        ils échangent deux codes, puis se connectent directement.
+        Cette méthode ne nécessite aucun accès à Internet. Les deux appareils doivent être sur le même réseau wifi, le même point d’accès ou le même câble. Ils échangent deux codes, puis se connectent directement.
       </p>
       <div class="choices">
-        <button class="btn big" type="button" :disabled="busy" @click="startHost">Je commence</button>
-        <button class="btn big ghost" type="button" :disabled="busy" @click="startGuest">Je rejoins</button>
+        <button class="btn big" type="button" :disabled="busy" @click="startHost">Afficher le code</button>
+        <button class="btn big ghost" type="button" :disabled="busy" @click="startGuest">Scanner un code</button>
       </div>
-      <p class="hint">« Je commence » affiche un code que l’autre appareil scanne. « Je rejoins » scanne le code de l’autre appareil.</p>
+      <p class="hint">Sur le premier appareil, choisissez « Afficher le code ». Sur le second, choisissez « Scanner un code ».</p>
     </div>
 
     <div v-else-if="step === 'done'" class="sheet-body">
-      <p class="done">Connecté à <strong>{{ peerName }}</strong>. Vous pouvez envoyer des fichiers.</p>
+      <p class="done">Connexion établie avec <strong>{{ peerName }}</strong>. Vous pouvez envoyer des fichiers.</p>
     </div>
 
     <div v-else-if="step === 'connecting'" class="sheet-body">
@@ -204,23 +203,23 @@ onBeforeUnmount(() => reset());
     <div v-else class="sheet-body">
       <ol class="steps">
         <li v-if="step === 'show-offer'">
-          <strong>Montrez ce code à l’autre appareil</strong> (il touche « Je rejoins »).
+          <strong>Présentez ce code à l’autre appareil</strong>, qui doit choisir « Scanner un code ».
           <div v-if="qr" class="qr big" role="img" aria-label="Code à scanner" v-html="qr" />
           <div class="composer-actions">
             <button class="btn ghost" type="button" @click="copy">{{ copied ? 'Code copié' : 'Copier le code' }}</button>
           </div>
         </li>
         <li v-if="step === 'show-offer'">
-          <strong>Scannez le code de réponse</strong> qui s’affiche sur l’autre appareil.
+          <strong>Scannez le code de réponse</strong> affiché sur l’autre appareil.
           <QrScanner v-if="stream" :stream="stream" @code="receive" />
         </li>
 
         <li v-if="step === 'scan-offer'">
-          <strong>Scannez le code</strong> affiché par l’autre appareil (il touche « Je commence »).
+          <strong>Scannez le code</strong> affiché par l’autre appareil, qui doit choisir « Afficher le code ».
           <QrScanner v-if="stream" :stream="stream" @code="receive" />
         </li>
         <li v-if="step === 'show-answer'">
-          <strong>Montrez ce code de réponse</strong> à l’autre appareil, qui doit le scanner.
+          <strong>Présentez ce code de réponse</strong> à l’autre appareil, qui doit le scanner.
           <div v-if="qr" class="qr big" role="img" aria-label="Code de réponse à scanner" v-html="qr" />
           <div class="composer-actions">
             <button class="btn ghost" type="button" @click="copy">{{ copied ? 'Code copié' : 'Copier le code' }}</button>
@@ -229,15 +228,15 @@ onBeforeUnmount(() => reset());
       </ol>
 
       <p v-if="cameraDenied" class="note">
-        La caméra n’est pas disponible. Copiez le code, transmettez-le à l’autre appareil (message, note…) et collez le code reçu ci-dessous.
-        Sans la caméra, la connexion peut échouer sur certains réseaux.
+        La caméra n’est pas disponible. Copiez le code, transmettez-le à l’autre appareil par message, puis collez le code reçu ci-dessous.
+        Sans accès à la caméra, la connexion peut échouer sur certains réseaux.
       </p>
 
       <details v-if="step === 'show-offer' || step === 'scan-offer'" class="manual" :open="cameraDenied">
-        <summary>Saisir ou coller un code</summary>
+        <summary>Saisir un code manuellement</summary>
         <form @submit.prevent="receive(manual)">
           <textarea v-model="manual" rows="3" placeholder="WD1…" aria-label="Code reçu de l’autre appareil" spellcheck="false" />
-          <button class="btn" type="submit" :disabled="!manual.trim() || busy">Valider le code</button>
+          <button class="btn" type="submit" :disabled="!manual.trim() || busy">Valider</button>
         </form>
       </details>
     </div>

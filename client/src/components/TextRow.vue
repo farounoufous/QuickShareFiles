@@ -21,7 +21,7 @@ onBeforeUnmount(() => clearTimeout(timer));
   <li class="transfer text-card" :class="{ 'is-pending': item.direction === 'receive' }">
     <div class="transfer-main">
       <p class="transfer-title">
-        {{ item.direction === 'receive' ? `${item.peerName} vous a envoyé du texte` : `Texte envoyé à ${item.peerName}` }}
+        {{ item.direction === 'receive' ? `Texte reçu de ${item.peerName}` : `Texte envoyé à ${item.peerName}` }}
       </p>
       <pre class="text-body">{{ item.text }}</pre>
       <p v-if="item.failed" class="transfer-sub bad">L’envoi a échoué : l’appareil est injoignable.</p>

@@ -43,7 +43,7 @@ const handler = createRequestHandler({
       url: `http://${n.address}:${config.httpPort}`,
       secureUrl: httpsActive ? `https://${n.address}:${config.httpsPort}` : '',
     })),
-    iceServers: config.iceServers,
+    iceServers: [],
   }),
 });
 

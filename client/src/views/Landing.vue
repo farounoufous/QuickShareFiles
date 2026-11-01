@@ -17,73 +17,73 @@ onMounted(async () => {
 const steps = [
   {
     title: 'Ouvrez WifiDrop sur les deux appareils',
-    text: 'Connectez-les au même wifi, puis créez une salle sur le premier et rejoignez-la avec le code, le lien ou le QR code sur le second.',
+    text: 'Connectez-les au même réseau wifi, puis créez une salle sur le premier appareil. Sur le second, rejoignez-la avec le code, le lien ou le QR code.',
   },
   {
     title: 'Choisissez les fichiers',
-    text: 'Glissez-les sur l’appareil de destination ou sélectionnez-les. Son propriétaire accepte la demande avant que le transfert ne commence.',
+    text: 'Sélectionnez-les ou glissez-les sur l’appareil de destination. Le destinataire doit accepter la demande avant le début du transfert.',
   },
   {
     title: 'Le fichier arrive directement',
-    text: 'Il passe d’un navigateur à l’autre sur votre réseau local, sans détour par Internet et sans compte à créer.',
+    text: 'Il est transmis d’un navigateur à l’autre sur votre réseau local, sans passer par Internet et sans création de compte.',
   },
 ];
 
 const features = [
   {
     title: 'Aucune donnée mobile consommée',
-    text: 'Les fichiers circulent sur votre réseau local. Seule la page s’ouvre via Internet, pour environ 100 Ko, et elle peut ensuite être installée.',
+    text: 'Les fichiers circulent sur votre réseau local. Seule la page est chargée via Internet (environ 100 Ko). L’application peut ensuite être installée.',
   },
   {
-    title: 'Pas de serveur au milieu',
-    text: 'La connexion est directe entre les deux navigateurs. Le serveur se contente de présenter les appareils l’un à l’autre.',
+    title: 'Transfert direct entre appareils',
+    text: 'La connexion est établie entre les deux navigateurs. Le serveur sert uniquement à mettre les appareils en relation et ne reçoit jamais les fichiers.',
   },
   {
     title: 'Reprise après coupure',
-    text: 'Si le wifi saute pendant un gros transfert, il reprend là où il s’est arrêté, sans repartir de zéro.',
+    text: 'En cas de coupure du wifi, le transfert reprend là où il s’est arrêté, sans repartir de zéro.',
   },
   {
     title: 'Plusieurs fichiers, plusieurs destinataires',
-    text: 'Envoyez des dossiers entiers, ou le même lot à plusieurs appareils d’un seul geste.',
+    text: 'Envoyez plusieurs fichiers ou le même lot à plusieurs appareils en une seule opération.',
   },
   {
     title: 'Textes et liens',
-    text: 'Collez un lien ou un texte et il arrive sur l’autre appareil, prêt à être copié ou ouvert.',
+    text: 'Un lien ou un texte saisi sur un appareil s’affiche sur l’autre, prêt à être copié ou ouvert.',
   },
   {
-    title: 'Fonctionne sans Internet',
-    text: 'Deux appareils sur le même réseau peuvent se relier en échangeant deux QR codes, sans aucun serveur.',
+    title: 'Utilisable sans Internet',
+    text: 'Deux appareils sur le même réseau peuvent se connecter en échangeant deux QR codes, sans aucun serveur.',
   },
 ];
 
 const faq = [
   {
-    q: 'Les deux appareils doivent-ils être sur le même wifi ?',
-    a: 'Ce n’est pas obligatoire, mais c’est ce qui marche le mieux : sur le même wifi (ou le même point d’accès, le partage de connexion d’un téléphone convient très bien), le transfert reste sur votre réseau et ne coûte aucune donnée. Entre deux réseaux différents, WifiDrop tente une connexion directe via Internet, qui consomme des données et que certains réseaux mobiles bloquent.',
+    q: 'Les deux appareils doivent-ils être sur le même réseau ?',
+    a: 'Oui. Les deux appareils doivent être connectés au même réseau wifi ou au même point d’accès. Le partage de connexion d’un téléphone convient. Le transfert reste alors sur votre réseau local.',
   },
   {
-    q: 'Est-ce que cela consomme mes données mobiles ?',
-    a: 'Pas pour un transfert entre deux appareils du même wifi : seule la page s’ouvre via Internet, pour environ 100 Ko. Entre deux réseaux différents, le fichier passe par Internet et consomme des données.',
+    q: 'Le transfert consomme-t-il des données mobiles ?',
+    a: 'Non. Seule la page est chargée via Internet (environ 100 Ko). Une fois l’application installée, elle peut s’ouvrir sans connexion.',
   },
   {
     q: 'Quelle vitesse puis-je attendre ?',
-    a: 'Elle dépend de votre réseau. En wifi 5 GHz, comptez de l’ordre de 20 à 60 Mo/s, soit 1 Go en 20 à 50 secondes. Il s’agit d’une estimation, pas d’une garantie.',
+    a: 'Elle dépend de votre réseau. En wifi 5 GHz, comptez de l’ordre de 20 à 60 Mo/s, soit 1 Go en 20 à 50 secondes environ. Il s’agit d’une estimation.',
   },
   {
     q: 'Y a-t-il une limite de taille ?',
-    a: 'WifiDrop n’en impose pas. Sur Chrome ou Edge d’un ordinateur, en https, le fichier est écrit directement sur le disque. Sur les autres navigateurs il est gardé en mémoire jusqu’à la fin, ce qui convient jusqu’à 1 ou 2 Go.',
+    a: 'WifiDrop n’en impose pas. Sur Chrome ou Edge pour ordinateur, en https, le fichier est écrit directement sur le disque. Sur les autres navigateurs, il est conservé en mémoire jusqu’à la fin du transfert, ce qui convient jusqu’à 1 ou 2 Go.',
   },
   {
     q: 'Mes fichiers sont-ils stockés quelque part ?',
-    a: 'Non. Ils ne sont ni enregistrés ni lus par le serveur, et chaque réception demande l’accord du destinataire.',
+    a: 'Non. Le serveur ne les enregistre pas et ne les lit pas. Chaque réception nécessite l’accord du destinataire.',
   },
 ];
 
 const compare = [
-  ['Vitesse en pratique', 'Souvent moins de 1 Mo/s', 'Plusieurs dizaines de Mo/s sur un bon wifi'],
-  ['iPhone vers Android', 'Impossible en général', 'Fonctionne dans le navigateur'],
-  ['Appairage', 'Nécessaire à chaque nouvel appareil', 'Un code ou un lien suffit'],
-  ['Installation', 'Réglages à activer des deux côtés', 'Aucune, ni compte ni application'],
+  ['Vitesse en pratique', 'Souvent moins de 1 Mo/s', 'Plusieurs dizaines de Mo/s sur un bon réseau wifi'],
+  ['iPhone vers Android', 'Généralement impossible', 'Fonctionne dans le navigateur'],
+  ['Appairage', 'Requis pour chaque nouvel appareil', 'Un code ou un lien suffit'],
+  ['Installation', 'Activation requise sur les deux appareils', 'Aucune installation ni compte'],
 ];
 </script>
 
@@ -105,15 +105,15 @@ const compare = [
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <h1>Envoyez un fichier lourd à l’appareil d’à côté, sans entamer votre forfait.</h1>
+          <h1>Envoyez un fichier volumineux à un appareil proche, sans consommer vos données mobiles.</h1>
           <p class="hero-lead">
-            WifiDrop transfère vos fichiers directement d’un appareil à l’autre par le wifi. Rien à installer, aucun câble, aucune donnée mobile consommée.
+            WifiDrop transfère vos fichiers directement d’un appareil à l’autre par le wifi. Aucune installation, aucun câble, aucune donnée mobile utilisée.
           </p>
           <div class="hero-actions">
             <button class="btn big" type="button" @click="emit('open')">Envoyer un fichier</button>
-            <a class="btn big quiet" href="#fonctionnement">Voir comment ça marche</a>
+            <a class="btn big quiet" href="#fonctionnement">Découvrir le fonctionnement</a>
           </div>
-          <p class="hero-note">Fonctionne dans le navigateur, sans compte.</p>
+          <p class="hero-note">Fonctionne dans le navigateur, sans création de compte.</p>
         </div>
 
         <figure class="stage" aria-label="Illustration : un fichier en cours d’envoi d’un ordinateur vers un téléphone">
@@ -163,7 +163,7 @@ const compare = [
 
       <section id="fonctionnalites" class="block tint">
         <div class="block-in">
-          <h2>Pensé pour les gros fichiers</h2>
+          <h2>Conçu pour les fichiers volumineux</h2>
           <ul class="feature-list">
             <li v-for="f in features" :key="f.title">
               <h3>{{ f.title }}</h3>
@@ -174,8 +174,8 @@ const compare = [
       </section>
 
       <section class="block">
-        <h2>Pourquoi pas le Bluetooth ?</h2>
-        <p class="block-lead">Le Bluetooth fait le travail pour une photo. Pour une vidéo ou un dossier, la différence se compte en minutes.</p>
+        <h2>WifiDrop et Bluetooth</h2>
+        <p class="block-lead">Le Bluetooth convient pour une photo. Pour une vidéo ou un dossier volumineux, l’écart de vitesse devient important.</p>
         <div class="table-wrap">
           <table class="compare">
             <thead>
@@ -210,8 +210,8 @@ const compare = [
       </section>
 
       <section class="cta-band">
-        <h2>Un fichier à envoyer ?</h2>
-        <p>Ouvrez WifiDrop sur les deux appareils et commencez en quelques secondes.</p>
+        <h2>Prêt à envoyer un fichier ?</h2>
+        <p>Ouvrez WifiDrop sur les deux appareils pour commencer.</p>
         <button class="btn big" type="button" @click="emit('open')">Ouvrir WifiDrop</button>
       </section>
     </main>

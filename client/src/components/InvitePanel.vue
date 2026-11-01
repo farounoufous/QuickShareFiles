@@ -44,13 +44,13 @@ function share() {
       <div v-if="svg" class="qr" role="img" :aria-label="`Code QR vers ${target}`" v-html="svg" />
 
       <div v-if="isPublic" class="invite-text">
-        <p>Sur l’autre appareil, scannez le code, ouvrez le lien ou saisissez ce code de salle :</p>
+        <p>Sur l’autre appareil, scannez le code, ouvrez le lien ou saisissez le code de la salle :</p>
         <p class="room-code" aria-label="Code de la salle">{{ state.room }}</p>
         <div class="composer-actions">
           <button class="btn" type="button" @click="copyLink">{{ copied ? 'Lien copié' : 'Copier le lien' }}</button>
           <button v-if="canShare" class="btn ghost" type="button" @click="share">Partager</button>
         </div>
-        <p class="hint">La salle disparaît quand tout le monde l’a quittée. Pour ne pas consommer de données mobiles, restez sur le même wifi.</p>
+        <p class="hint">La salle est supprimée lorsque le dernier appareil la quitte. Les appareils doivent être connectés au même réseau wifi.</p>
       </div>
 
       <div v-else class="invite-text">
@@ -58,7 +58,7 @@ function share() {
         <code class="address">{{ target }}</code>
 
         <template v-if="networks.length > 1">
-          <p class="hint">L’autre appareil est connecté à quel réseau ?</p>
+          <p class="hint">Sur quel réseau l’autre appareil est-il connecté ?</p>
           <div class="chips" role="group" aria-label="Réseau de l’autre appareil">
             <button
               v-for="(net, i) in networks"
@@ -74,11 +74,11 @@ function share() {
         </template>
 
         <p v-if="current?.secureUrl" class="hint">
-          Pour les très gros fichiers, sur Chrome ou Edge d’un ordinateur, ouvrez plutôt
-          <code>{{ current.secureUrl }}</code> et acceptez le certificat.
+          Pour les fichiers très volumineux, utilisez Chrome ou Edge sur ordinateur et ouvrez
+          <code>{{ current.secureUrl }}</code> (acceptez le certificat).
         </p>
         <p v-if="!networks.length" class="note">
-          Aucun réseau détecté sur l’ordinateur qui héberge WifiDrop : connectez-le à un wifi, activez un point d’accès ou branchez un câble.
+          Aucun réseau détecté sur cet ordinateur. Connectez-le à un réseau wifi, activez un point d’accès ou branchez un câble.
         </p>
       </div>
     </div>

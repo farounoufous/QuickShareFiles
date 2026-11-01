@@ -1,7 +1,5 @@
 import { join } from 'node:path';
 
-const DEFAULT_STUN = ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'];
-
 const truthy = (value, fallback) => {
   if (value === undefined || value === '') return fallback;
   return !['0', 'false', 'non', 'no', 'off'].includes(String(value).toLowerCase());
@@ -25,7 +23,6 @@ const list = (value) =>
  *  TRUST_PROXY     lire l'IP réelle dans X-Forwarded-For : non en local, oui en public (derrière un proxy)
  *  ALLOWED_ORIGINS domaines autorisés à ouvrir le WebSocket en plus du domaine servi (séparés par des virgules)
  *  MAX_ROOM_PEERS  appareils maximum par salle (mode public), 20 par défaut
- *  STUN_URLS       serveurs STUN (séparés par des virgules). Public : Google et Cloudflare par défaut ; vide en local ; "" pour désactiver
  *  STATIC_DIR      dossier de l'interface construite
  *  CERT_DIR        dossier du certificat auto-signé (mode local)
  */
@@ -46,9 +43,6 @@ export function loadConfig(env = process.env, { clientDist } = {}) {
     trustProxy: truthy(env.TRUST_PROXY, isPublic),
     allowedOrigins: list(env.ALLOWED_ORIGINS),
     maxRoomPeers: Math.max(2, number(env.MAX_ROOM_PEERS, 20)),
-    // En public, des serveurs STUN permettent la connexion directe entre réseaux différents.
-    // STUN_URLS="" les désactive : seuls les appareils d'un même réseau se joignent alors.
-    iceServers: (env.STUN_URLS === undefined ? (isPublic ? DEFAULT_STUN : []) : list(env.STUN_URLS)).map((urls) => ({ urls })),
     staticDir: env.STATIC_DIR || clientDist,
     certDir: env.CERT_DIR || undefined,
   };

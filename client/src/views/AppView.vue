@@ -29,13 +29,13 @@ const inRoom = computed(() => !isPublic.value || (state.connected && Boolean(sta
 const status = computed(() => {
   if (hasOfflinePeer.value && !state.connected) {
     const n = state.peers.length;
-    return `Prêt sans serveur, ${n} appareil${n > 1 ? 's' : ''} relié${n > 1 ? 's' : ''}`;
+    return `Connexion sans serveur : ${n} appareil${n > 1 ? 's' : ''} relié${n > 1 ? 's' : ''}`;
   }
   if (state.serverDown) return 'Serveur injoignable';
   if (!state.connected) return isPublic.value ? 'Aucune salle ouverte' : 'Connexion au serveur…';
   const n = isPublic.value ? state.peers.filter((p) => p.kind === 'server').length : state.peers.length;
   const where = isPublic.value ? `dans la salle ${state.room}` : 'à proximité';
-  return n === 0 ? 'Prêt, aucun autre appareil pour l’instant' : `Prêt, ${n} appareil${n > 1 ? 's' : ''} ${where}`;
+  return n === 0 ? 'Prêt : aucun autre appareil pour le moment' : `Prêt : ${n} appareil${n > 1 ? 's' : ''} ${where}`;
 });
 
 const hasFinished = computed(() => state.transfers.some((t) => ['done', 'error', 'declined', 'canceled'].includes(t.status)));
@@ -62,7 +62,7 @@ const toggleAll = () => (selected.value = allSelected.value ? [] : state.peers.m
 
 function announce(count) {
   sentNotice.value = count
-    ? `Demande envoyée à ${count} appareil${count > 1 ? 's' : ''}. Chacun doit l’accepter pour recevoir les fichiers.`
+    ? `Demande envoyée à ${count} appareil${count > 1 ? 's' : ''}. Chaque destinataire doit l’accepter pour recevoir les fichiers.`
     : '';
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => (sentNotice.value = ''), 6000);
@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
         <form v-if="editing" class="me-edit" @submit.prevent="saveName">
           <input ref="nameInput" v-model="draft" maxlength="40" aria-label="Nom de cet appareil" @blur="saveName" @keydown.esc="editing = false" />
         </form>
-        <button v-else class="me-name" type="button" title="Changer le nom" @click="editName">{{ state.me.name || '…' }}</button>
+        <button v-else class="me-name" type="button" title="Modifier le nom" @click="editName">{{ state.me.name || '…' }}</button>
       </div>
     </header>
 
@@ -127,16 +127,16 @@ onBeforeUnmount(() => {
     </p>
 
     <p v-if="secureLink" class="note">
-      Cette page n’est pas sécurisée : les fichiers reçus sont gardés en mémoire avant d’être téléchargés.
+      Cette page n’est pas sécurisée (http) : les fichiers reçus sont conservés en mémoire avant d’être téléchargés.
       Pour les enregistrer directement sur le disque, ouvrez
       <a :href="secureLink">{{ secureLink }}</a>
       et acceptez le certificat.
     </p>
     <p v-if="relayOff" class="note">
-      Les fichiers vont directement d’un appareil à l’autre (pair à pair) et ne passent jamais par le serveur. Sur le même wifi, aucune donnée mobile n’est utilisée ; entre réseaux différents, la connexion passe par Internet.
+      Les fichiers sont transmis directement entre les appareils et ne transitent jamais par le serveur. Les deux appareils doivent être connectés au même réseau.
     </p>
     <p v-if="keepAwakeTip" class="note">
-      Gardez l’écran allumé pendant le transfert : certains téléphones coupent la connexion en veille.
+      Maintenez l’écran allumé pendant le transfert : certains téléphones interrompent la connexion en veille.
     </p>
 
     <RoomEntry v-if="!inRoom" @offline="offlineOpen = true" />
@@ -176,8 +176,8 @@ onBeforeUnmount(() => {
       <p v-else-if="state.connected" class="empty">
         {{
           isPublic
-            ? 'Partagez le code ou le lien de la salle : l’autre appareil apparaîtra ici.'
-            : 'Ouvrez WifiDrop sur un autre appareil connecté au même réseau : il apparaîtra ici.'
+            ? 'Partagez le code ou le lien de la salle pour inviter un autre appareil.'
+            : 'Ouvrez WifiDrop sur un autre appareil connecté au même réseau pour l’ajouter.'
         }}
       </p>
       <InvitePanel v-if="state.connected && !(isPublic && !state.room)" :open="!state.peers.length" />
@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
     </section>
 
     <footer class="foot">
-      <button class="link" type="button" @click="offlineOpen = true">Sans serveur : relier deux appareils par codes QR</button>
+      <button class="link" type="button" @click="offlineOpen = true">Connexion sans serveur par codes QR</button>
       <button v-if="pwa.canInstall" class="link" type="button" @click="installApp()">Installer l’application</button>
       <span v-else-if="pwa.iosHint" class="hint">Pour installer l’application : bouton Partager, puis « Sur l’écran d’accueil ».</span>
     </footer>
