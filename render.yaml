@@ -1,0 +1,10 @@
+# Déploiement sur Render : New > Blueprint, puis sélectionne le dépôt.
+services:
+  - type: web
+    name: wifidrop
+    runtime: docker
+    plan: free # le plan gratuit se met en veille sans visite : le premier chargement peut prendre ~1 minute
+    healthCheckPath: /healthz
+    envVars:
+      - key: MODE
+        value: public

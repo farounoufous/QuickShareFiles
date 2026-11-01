@@ -1,0 +1,16 @@
+{
+  "name": "wifidrop-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test --test-timeout=15000 test/*.test.js"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "selfsigned": "^5.5.0",
+    "ws": "^8.22.0"
+  }
+}

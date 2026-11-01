@@ -1,0 +1,17 @@
+{
+  "name": "wifidrop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transfert de fichiers lourds entre appareils du même réseau local, sans données mobiles.",
+  "type": "module",
+  "workspaces": ["server", "client"],
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "postinstall": "npm run build --workspace client",
+    "build": "npm run build --workspace client",
+    "start": "npm start --workspace server",
+    "dev:server": "npm run dev --workspace server",
+    "dev:client": "npm run dev --workspace client",
+    "test": "npm test --workspace server"
+  }
+}
