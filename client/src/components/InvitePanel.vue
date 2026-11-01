@@ -50,7 +50,7 @@ function share() {
           <button class="btn" type="button" @click="copyLink">{{ copied ? 'Lien copié' : 'Copier le lien' }}</button>
           <button v-if="canShare" class="btn ghost" type="button" @click="share">Partager</button>
         </div>
-        <p class="hint">La salle disparaît quand tout le monde l’a quittée. Les appareils doivent être sur le même wifi.</p>
+        <p class="hint">La salle disparaît quand tout le monde l’a quittée. Pour ne pas consommer de données mobiles, restez sur le même wifi.</p>
       </div>
 
       <div v-else class="invite-text">

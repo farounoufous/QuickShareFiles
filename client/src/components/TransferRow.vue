@@ -13,7 +13,11 @@ const busy = computed(() => isBusy(props.t));
 const percent = computed(() => (props.t.totalBytes ? Math.min(100, (props.t.doneBytes / props.t.totalBytes) * 100) : 100));
 const speed = computed(() => splitBytes(props.t.speed));
 const route = computed(() => {
-  if (props.t.transport === 'p2p') return 'Connexion directe';
+  if (props.t.transport === 'p2p') {
+    if (props.t.route === 'internet') return 'Connexion directe via Internet, consomme des données';
+    if (props.t.route === 'local') return 'Connexion directe sur le réseau local';
+    return 'Connexion directe';
+  }
   return state.mode === 'public' ? 'Via le serveur' : 'Via le serveur local';
 });
 const memoryWarning = computed(

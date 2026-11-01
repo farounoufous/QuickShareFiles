@@ -146,7 +146,7 @@ class WifiDrop {
       state.room = room ?? '';
       state.peers = [
         ...state.peers.filter((p) => p.kind === 'offline'),
-        ...peers.map((p) => ({ ...p, kind: 'server' })),
+        ...peers.filter((p) => p.id !== id).map((p) => ({ ...p, kind: 'server' })),
       ];
       if (state.mode === 'public' && room) {
         this.#want = { room };
@@ -181,7 +181,9 @@ class WifiDrop {
       }
     });
 
-    sig.on('peer-joined', ({ peer }) => state.peers.push({ ...peer, kind: 'server' }));
+    sig.on('peer-joined', ({ peer }) => {
+      if (peer.id !== state.me.id && !state.peers.some((p) => p.id === peer.id)) state.peers.push({ ...peer, kind: 'server' });
+    });
     sig.on('peer-updated', ({ peer }) => {
       const i = state.peers.findIndex((p) => p.id === peer.id);
       if (i >= 0) state.peers[i] = { ...peer, kind: 'server' };
@@ -377,7 +379,7 @@ class WifiDrop {
   send(peerId, fileList) {
     const files = [...fileList].slice(0, MAX_FILES);
     const peer = state.peers.find((p) => p.id === peerId);
-    if (!files.length || !peer) return;
+    if (!files.length || !peer || peer.id === state.me.id) return; // on ne s'envoie jamais un fichier à soi-même
 
     const id = newTransferId();
     const st = this.#newState(id, 'send', peer, files);
@@ -395,7 +397,42 @@ class WifiDrop {
   /** Envoie les mêmes fichiers à plusieurs appareils : un transfert indépendant par destinataire. */
   sendMany(peerIds, fileList) {
     const files = [...fileList];
-    for (const id of peerIds) this.send(id, files);
+    const targets = [...new Set(peerIds)].filter((id) => id !== state.me.id && state.peers.some((p) => p.id === id));
+    for (const id of targets) this.send(id, files);
+    return targets.length;
+  }
+
+  /** Envoie les mêmes fichiers à tous les autres occupants de la salle ; chacun accepte ou refuse pour lui. */
+  sendToAll(fileList) {
+    return this.sendMany(
+      state.peers.map((p) => p.id),
+      fileList,
+    );
+  }
+
+  /** Les connexions entre réseaux différents prennent plus de temps à s'établir (recherche d'adresse publique). */
+  #p2pTimeout() {
+    return this.#ice.length ? P2P_TIMEOUT * 2 : P2P_TIMEOUT;
+  }
+
+  /** Repère si la connexion directe reste sur le réseau local ou passe par Internet (et consomme alors des données). */
+  async #probeRoute(live, pc) {
+    try {
+      const stats = await pc.getStats();
+      let pair;
+      stats.forEach((r) => {
+        if (r.type === 'transport' && r.selectedCandidatePairId) pair = stats.get(r.selectedCandidatePairId);
+      });
+      if (!pair) {
+        stats.forEach((r) => {
+          if (!pair && r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r;
+        });
+      }
+      const kinds = [stats.get(pair?.localCandidateId)?.candidateType, stats.get(pair?.remoteCandidateId)?.candidateType];
+      if (kinds.every(Boolean)) live.state.route = kinds.every((k) => k === 'host') ? 'local' : 'internet';
+    } catch {
+      /* statistiques indisponibles : l'affichage reste « connexion directe » */
+    }
   }
 
   #startP2P(live) {
@@ -413,12 +450,13 @@ class WifiDrop {
     live.pc = pc;
 
     const channel = pc.createDataChannel('wifidrop', { ordered: true });
-    live.p2pTimer = setTimeout(() => this.#p2pFailed(live), P2P_TIMEOUT);
+    live.p2pTimer = setTimeout(() => this.#p2pFailed(live), this.#p2pTimeout());
 
     channel.onopen = () => {
       if (live.settled || live.aborted || live.pc !== pc) return;
       live.settled = true;
       clearTimeout(live.p2pTimer);
+      this.#probeRoute(live, pc);
       const transport = new RtcTransport(channel);
       transport.onclose = () => this.#onTransportClosed(live, transport);
       this.#armSender(live, transport);
@@ -453,7 +491,7 @@ class WifiDrop {
     } catch {
       return this.#fail(live, 'Appareil déconnecté');
     }
-    live.p2pTimer = setTimeout(() => this.#fail(live, "Connexion directe impossible, essaie de reconnecter les deux appareils", true), P2P_TIMEOUT * 2);
+    live.p2pTimer = setTimeout(() => this.#fail(live, "Connexion directe impossible, essayez de reconnecter les deux appareils", true), P2P_TIMEOUT * 2);
     channel.onopen = () => {
       if (live.settled || live.aborted) return;
       live.settled = true;
@@ -480,7 +518,7 @@ class WifiDrop {
       live,
       state.relay
         ? 'Connexion au serveur perdue'
-        : 'Connexion directe impossible : les deux appareils doivent être sur le même réseau wifi (ou le même point d’accès).',
+        : 'Connexion directe impossible. Certains réseaux, notamment mobiles, la bloquent : placez les deux appareils sur le même wifi ou le même point d’accès, puis réessayez.',
       true,
     );
   }
@@ -683,6 +721,8 @@ class WifiDrop {
       const transport = new RtcTransport(channel);
       transport.onclose = () => this.#onTransportClosed(live, transport);
       this.#attachReceiver(live, transport);
+      if (channel.readyState === 'open') this.#probeRoute(live, pc);
+      else channel.addEventListener('open', () => this.#probeRoute(live, pc), { once: true });
     };
     this.#watchConnection(live, pc);
     live.resumeTimer = setTimeout(() => this.#fail(live, 'Connexion perdue : reprise impossible'), RESUME_TIMEOUT);
@@ -1021,6 +1061,7 @@ class WifiDrop {
       current: '',
       status: direction === 'send' ? 'waiting' : 'pending',
       transport: null,
+      route: null, // 'local' ou 'internet' une fois la connexion directe établie
       saveMode: null,
       reconnects: 0,
       error: '',

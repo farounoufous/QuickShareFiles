@@ -17,6 +17,9 @@ const nameInput = ref(null);
 const offlineOpen = ref(false);
 const selected = ref([]); // ids des appareils cochés pour un envoi groupé
 const groupInput = ref(null);
+const roomInput = ref(null);
+const sentNotice = ref('');
+let noticeTimer;
 
 const isPublic = computed(() => state.mode === 'public');
 // En mode public, on n'affiche le salon qu'une fois dans une salle.
@@ -30,7 +33,7 @@ const status = computed(() => {
   }
   if (state.serverDown) return 'Serveur injoignable';
   if (!state.connected) return isPublic.value ? 'Aucune salle ouverte' : 'Connexion au serveur…';
-  const n = state.peers.length;
+  const n = isPublic.value ? state.peers.filter((p) => p.kind === 'server').length : state.peers.length;
   const where = isPublic.value ? `dans la salle ${state.room}` : 'à proximité';
   return n === 0 ? 'Prêt, aucun autre appareil pour l’instant' : `Prêt, ${n} appareil${n > 1 ? 's' : ''} ${where}`;
 });
@@ -54,12 +57,27 @@ watch(
 const toggle = (id) => {
   selected.value = selected.value.includes(id) ? selected.value.filter((x) => x !== id) : [...selected.value, id];
 };
-const selectAll = () => (selected.value = state.peers.map((p) => p.id));
+const allSelected = computed(() => state.peers.length > 0 && selected.value.length === state.peers.length);
+const toggleAll = () => (selected.value = allSelected.value ? [] : state.peers.map((p) => p.id));
+
+function announce(count) {
+  sentNotice.value = count
+    ? `Demande envoyée à ${count} appareil${count > 1 ? 's' : ''}. Chacun doit l’accepter pour recevoir les fichiers.`
+    : '';
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => (sentNotice.value = ''), 6000);
+}
 
 function groupPick(event) {
   const files = [...event.target.files];
   event.target.value = '';
-  if (files.length && selected.value.length) drop.sendMany(selected.value, files);
+  if (files.length && selected.value.length) announce(drop.sendMany(selected.value, files));
+}
+
+function roomPick(event) {
+  const files = [...event.target.files];
+  event.target.value = '';
+  if (files.length) announce(drop.sendToAll(files));
 }
 
 async function editName() {
@@ -81,6 +99,7 @@ onMounted(() => {
   drop.start();
 });
 onBeforeUnmount(() => {
+  clearTimeout(noticeTimer);
   window.removeEventListener('dragover', stop);
   window.removeEventListener('drop', stop);
 });
@@ -114,7 +133,7 @@ onBeforeUnmount(() => {
       et acceptez le certificat.
     </p>
     <p v-if="relayOff" class="note">
-      Ce service ne relaie pas les fichiers, afin de préserver vos données. Les deux appareils doivent être sur le même réseau.
+      Les fichiers vont directement d’un appareil à l’autre (pair à pair) et ne passent jamais par le serveur. Sur le même wifi, aucune donnée mobile n’est utilisée ; entre réseaux différents, la connexion passe par Internet.
     </p>
     <p v-if="keepAwakeTip" class="note">
       Gardez l’écran allumé pendant le transfert : certains téléphones coupent la connexion en veille.
@@ -128,12 +147,19 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-if="multi" class="group-bar">
-        <button class="link" type="button" @click="selectAll">Tout sélectionner</button>
-        <button class="btn" type="button" :disabled="!selected.length" @click="groupInput.click()">
-          Envoyer à {{ selected.length || '…' }} appareil{{ selected.length > 1 ? 's' : '' }}
-        </button>
+        <button class="link" type="button" @click="toggleAll">{{ allSelected ? 'Tout désélectionner' : 'Tout sélectionner' }}</button>
+        <div class="group-actions">
+          <button class="btn ghost" type="button" :disabled="!selected.length" @click="groupInput.click()">
+            {{ selected.length ? `Envoyer à ${selected.length} appareil${selected.length > 1 ? 's' : ''}` : 'Envoyer à la sélection' }}
+          </button>
+          <button class="btn" type="button" @click="roomInput.click()">
+            Envoyer à toute la salle ({{ state.peers.length }})
+          </button>
+        </div>
         <input ref="groupInput" type="file" multiple hidden @change="groupPick" />
+        <input ref="roomInput" type="file" multiple hidden @change="roomPick" />
       </div>
+      <p v-if="sentNotice" class="note" role="status">{{ sentNotice }}</p>
 
       <ul v-if="state.peers.length" class="peers">
         <PeerRow

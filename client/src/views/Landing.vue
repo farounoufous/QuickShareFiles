@@ -59,11 +59,11 @@ const features = [
 const faq = [
   {
     q: 'Les deux appareils doivent-ils être sur le même wifi ?',
-    a: 'Oui, ou sur le même point d’accès : le partage de connexion d’un téléphone convient très bien. Entre deux réseaux différents, la connexion directe n’est pas possible.',
+    a: 'Ce n’est pas obligatoire, mais c’est ce qui marche le mieux : sur le même wifi (ou le même point d’accès, le partage de connexion d’un téléphone convient très bien), le transfert reste sur votre réseau et ne coûte aucune donnée. Entre deux réseaux différents, WifiDrop tente une connexion directe via Internet, qui consomme des données et que certains réseaux mobiles bloquent.',
   },
   {
     q: 'Est-ce que cela consomme mes données mobiles ?',
-    a: 'Pas pour le transfert. Seule la page s’ouvre via Internet, pour environ 100 Ko. Une fois l’application installée, elle se charge même sans connexion.',
+    a: 'Pas pour un transfert entre deux appareils du même wifi : seule la page s’ouvre via Internet, pour environ 100 Ko. Entre deux réseaux différents, le fichier passe par Internet et consomme des données.',
   },
   {
     q: 'Quelle vitesse puis-je attendre ?',

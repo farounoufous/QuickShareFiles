@@ -33,7 +33,7 @@ Dans les deux modes, une fois la connexion directe établie, **les fichiers ne p
 ## Fonctionnalités
 
 - **Envoi de fichiers et de dossiers**, plusieurs fichiers à la fois.
-- **Envoi à plusieurs appareils** : coche les destinataires, choisis les fichiers.
+- **Envoi à plusieurs appareils** : coche les destinataires, ou utilise « Envoyer à toute la salle ». Chaque destinataire accepte ou refuse pour lui-même, et personne ne peut s'envoyer un fichier à soi-même.
 - **Texte, liens, presse-papiers** : bouton « Texte » sur chaque appareil. Un lien reçu s'ouvre d'un clic.
 - **Reprise après interruption** : si le wifi saute ou que la connexion directe tombe, le transfert reprend là où il s'était arrêté (vérifié sur un fichier de 100 Mo, contenu identique).
 - **Écran gardé allumé** pendant un transfert (API Wake Lock, sur les navigateurs qui la proposent).
@@ -110,7 +110,7 @@ Essaie dans cet ordre, sur l'appareil qui n'y arrive pas :
 | `TRUST_PROXY` | `non` en local, `oui` en public | Lire l'IP réelle dans `X-Forwarded-For` (derrière le proxy de l'hébergeur) |
 | `ALLOWED_ORIGINS` | vide | Domaines autorisés à ouvrir le WebSocket en plus de celui qui sert la page |
 | `MAX_ROOM_PEERS` | `20` | Appareils maximum par salle |
-| `STUN_URLS` | vide | Serveurs STUN séparés par des virgules (voir ci-dessous) |
+| `STUN_URLS` | Google et Cloudflare en public, vide en local | Serveurs STUN séparés par des virgules ; vide pour les désactiver |
 | `CERT_DIR` | `server/.certs` | Dossier du certificat auto-signé (mode local) |
 
 Exemple : `PORT=8080 npm start`
@@ -150,10 +150,10 @@ Sans Docker : `npm ci && npm run build && MODE=public npm start`.
 ### À savoir avant de publier
 
 - **Une seule instance.** Les salles vivent en mémoire : deux instances ne se verraient pas. N'active pas l'autoscaling.
-- **Les deux appareils doivent être sur le même wifi** pour la connexion directe. Le serveur sert seulement à les présenter l'un à l'autre. Sans serveur STUN, WebRTC ne trouve que les adresses locales : c'est voulu (pas de TURN payant, pas de fichier qui passe par Internet).
-- **Entre deux réseaux différents** (ex. un ami sur un autre wifi), il faudrait un serveur TURN : le fichier passerait par Internet, donc par des données mobiles. WifiDrop ne le propose pas.
+- **Même wifi ou réseaux différents.** Sur le même wifi, la connexion reste locale et ne consomme aucune donnée. Entre réseaux différents, des serveurs STUN (Google et Cloudflare par défaut en mode public) permettent une connexion directe via Internet : elle consomme des données, et elle échoue sur les réseaux qui la bloquent (fréquent sur les réseaux mobiles). L'interface indique « Connexion directe sur le réseau local » ou « via Internet » pendant le transfert.
+- **Pas de TURN** : si la connexion directe est impossible, le transfert échoue avec un message explicite, car un relais ferait passer le fichier par le serveur (lent, et il consomme la bande passante de l'hébergeur).
 - Le relais par le serveur est **désactivé** en mode public. Active-le avec `ALLOW_RELAY=oui` si tu acceptes qu'un transfert qui échoue en direct passe par ton serveur (ça consomme sa bande passante et les données des appareils).
-- Un STUN (`STUN_URLS=stun:stun.l.google.com:19302`) n'aide que pour les appareils derrière des réseaux complexes ; il envoie l'adresse publique des appareils à ce service.
+- Les serveurs STUN voient l'adresse publique des appareils (jamais les fichiers). Pour les désactiver et limiter WifiDrop au même réseau : `STUN_URLS=` (vide).
 - Protections intégrées : salles éphémères et étanches, limites de fréquence par IP, taille des messages limitée, en-têtes de sécurité et CSP.
 
 ## Développement
